@@ -13,7 +13,7 @@
 
           poetryDeps = pkgs: (with pkgs; [
             poetry
-            zlib
+            just
           ]);
         in
         {
