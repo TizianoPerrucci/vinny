@@ -1,6 +1,8 @@
-IMAGE_NAME := "vinny"
 HOME := home_dir()
 PARENT := parent_directory(justfile_directory())
+
+IMAGE_NAME := "vinny"
+IMAGE_TAG := "latest"
 
 clone-3d-libs:
     git clone https://github.com/Tencent-Hunyuan/Hunyuan3D-2.git  #3b9a151
@@ -19,7 +21,7 @@ install-3d-libs: clone-3d-libs checkpoints
 
 build:
 	docker buildx build \
-	  -t {{IMAGE_NAME}}:latest \
+	  -t {{IMAGE_NAME}}:{{IMAGE_TAG}} \
 	  -f Dockerfile .
 
 run: build
@@ -29,4 +31,4 @@ run: build
 	  --mount type=bind,src={{PARENT}}/vnyx,dst=/app/vnyx \
 	  --mount type=bind,src={{PARENT}}/vinny/vinny,dst=/app/vinny \
 	  --mount type=bind,src={{PARENT}}/vinny/output,dst=/app/output \
-	  -t {{IMAGE_NAME}}:latest
+	  -t {{IMAGE_NAME}}:{{IMAGE_TAG}}
