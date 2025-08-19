@@ -2,6 +2,7 @@ import argparse
 import os
 
 from .bg import BackgroundRemover
+from .shape import generate_shape
 
 orig_images_path = {
     "front": "Jeans_1_0.jpg",
@@ -13,6 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_dir", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
+    parser.add_argument("--shape_name", type=str, required=True)
     args = parser.parse_args()
 
     print(f"Ensuring output dir {args.output_dir} exists")
@@ -25,3 +27,4 @@ if __name__ == "__main__":
         nobg_image = br.remove_bg(fullpath, args.output_dir)
         nobg_images[side] = nobg_image
 
+    generate_shape(nobg_images, args.output_dir, args.shape_name)
