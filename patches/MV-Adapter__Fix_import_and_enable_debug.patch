@@ -1,0 +1,63 @@
+Subject: [PATCH] MV-Adapter: Fix import and enable debug
+---
+Index: mvadapter/pipelines/pipeline_texture.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/mvadapter/pipelines/pipeline_texture.py b/mvadapter/pipelines/pipeline_texture.py
+--- a/mvadapter/pipelines/pipeline_texture.py	(revision 0c3260c7eba8b96fb7b7b15c1917163cf3baec9e)
++++ b/mvadapter/pipelines/pipeline_texture.py	(date 1753870808859)
+@@ -130,7 +130,7 @@
+             max_rounds=config.view_inpaint_max_rounds,
+             uv_padding_end=config.view_inpaint_uv_padding_end,
+             debug_dir=debug_dir,
+-            debug_visualize_details=False,
++            debug_visualize_details=True,
+         )
+ 
+     def __call__(
+Index: mvadapter/utils/mesh_utils/mesh_process.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/mvadapter/utils/mesh_utils/mesh_process.py b/mvadapter/utils/mesh_utils/mesh_process.py
+--- a/mvadapter/utils/mesh_utils/mesh_process.py	(revision 0c3260c7eba8b96fb7b7b15c1917163cf3baec9e)
++++ b/mvadapter/utils/mesh_utils/mesh_process.py	(date 1753277601716)
+@@ -3,7 +3,7 @@
+ import pymeshlab
+ import torch
+ import trimesh
+-from pymeshlab import Percentage
++from pymeshlab import PercentageValue
+ 
+ 
+ ### Mesh Utils ###
+@@ -75,7 +75,7 @@
+     m = ms.current_mesh()
+     if verbose:
+         print("... Initial vertex number is %d ... " % m.vertex_number())
+-    ms.meshing_merge_close_vertices(threshold=Percentage(threshold * 100))
++    ms.meshing_merge_close_vertices(threshold=PercentageValue(threshold * 100))
+     if verbose:
+         print("... Merged vertex number is %d ... " % m.vertex_number())
+         print("Merge vertices done!\n ")
+@@ -96,7 +96,7 @@
+         )
+     else:
+         ms.meshing_remove_connected_component_by_diameter(
+-            mincomponentdiag=Percentage(diameter), removeunref=True
++            mincomponentdiag=PercentageValue(diameter), removeunref=True
+         )
+     if verbose:
+         print("... Isolated removed face number is %d ... " % m.face_number())
+@@ -271,7 +271,7 @@
+         "targetfacenum": 50000,
+         "maxholesize": 100,
+         "stepsmoothnum": 10,
+-        "verbose": False,
++        "verbose": True,
+     }
+ 
+     if preprocess:
