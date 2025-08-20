@@ -1,16 +1,15 @@
-from typing import Optional, Type, List, Union
+from typing import Optional, Type, List, Union, Dict
 
 import torch
 import numpy as np
-from numpy import dtype
 from PIL import Image
 from diffusers import (
     AutoencoderKL,
     UNet2DConditionModel,
     DDPMScheduler,
-    LCMScheduler,
-    StableDiffusionPipeline
+    LCMScheduler
 )
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import StableDiffusionPipeline
 
 from mvadapter.models.attention_processor import DecoupledMVRowColSelfAttnProcessor2_0
 from mvadapter.pipelines.pipeline_mvadapter_i2mv_sd import MVAdapterI2MVSDPipeline
@@ -46,10 +45,11 @@ class TexturedMesh:
             self.adapter_weight_name = "mvadapter_ig2mv_sd21.safetensors"
             self.height = self.width = 512
             self.uv_size = 2048
+        else:
+            raise ValueError(f"MVAdapter variant {variant} invalid.")
 
         self.num_views = 6
         self.adapter_path = "huanngzh/mv-adapter"
-
 
     def prepare_pipeline(
             self,
@@ -61,7 +61,7 @@ class TexturedMesh:
             adapter_path: str,
             adapter_weight_name: str,
             scheduler: Optional[str],
-            dtype: dtype,
+            dtype: torch._C.dtype,
     ) -> StableDiffusionPipeline:
         # Load vae and unet if provided
         pipe_kwargs = {}
@@ -253,13 +253,14 @@ class TexturedMesh:
         print("Grid images generated")
         return images
 
-    def override_grid(self, images: List[Image.Image], orig: list[Image.Image], grid_path: str):
+    def override_grid(self, images: List[Image.Image], orig: Dict[str, Image.Image], grid_path: str):
         (w, h) = images[0].size
         print(f"Overriding first {len(orig)} images, based on size: w={w} h={h}")
 
-        for idx, img in enumerate(orig):
+        side_to_idx = {"front": 0, "left": 1, "back": 2, "right": 3}
+        for side, img in orig.items():
             print(f"PreProcessing {img}...")
-            images[idx] = self.preprocess_image(img, h, w)
+            images[side_to_idx[side]] = self.preprocess_image(img, h, w)
 
         print(f"Saving images grid to {grid_path} ...")
         make_image_grid(images, rows=1).save(grid_path)

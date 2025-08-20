@@ -1,41 +1,45 @@
 import argparse
+import json
 import os
-from typing import Dict
-
-from PIL import Image
 
 from .bg import BackgroundRemover
 from .mesh import TexturedMesh
 from .shape import generate_shape
 
-orig_images_path = {
-    "front": "Jeans_1_0.jpg",
-    "left": "Jeans_1_1.jpg",
-    "back": "Jeans_1_2.jpg",
-}
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_dir", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, required=True)
-    parser.add_argument("--shape_name", type=str, required=True)
+    parser.add_argument("--input", type=str, required=True, help="Json file containing side pictures mapping")
     parser.add_argument("--variant", type=str, required=True, choices=["sdxl", "sd21"])
-    parser.add_argument("--mesh_name", type=str, required=True)
+    parser.add_argument("--output_dir", type=str, required=True)
+    parser.add_argument("--grid_name", type=str, required=True, help="Filename of the output grid image")
+    parser.add_argument("--shape_name", type=str, required=True, help="Filename of the output shape mesh")
+    parser.add_argument("--mesh_name", type=str, required=True, help="Filename of the output textured mesh")
     args = parser.parse_args()
+
+    if not os.path.exists(args.input):
+        raise FileNotFoundError(f"Json file {args.input} not found")
+
+    orig_images_path = json.load(open(args.input))
+    print("Input images:")
+    print(json.dumps(orig_images_path, indent=4))
 
     print(f"Ensuring output dir {args.output_dir} exists")
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Remove the background from all pictures
     br = BackgroundRemover()
-    nobg_images: Dict[str, Image.Image] = {}
-    for side, path in orig_images_path.items():
-        fullpath = os.path.join(args.input_dir, path)
-        nobg_image = br.remove_bg(image_path=fullpath, output_dir=args.output_dir)
-        nobg_images[side] = nobg_image
+    nobg_images = br.remove_bg(
+        files=orig_images_path,
+        output_dir=args.output_dir
+    )
 
     # Generate the white mesh based on the background-free images
-    shape, shape_file = generate_shape(nobg_images, args.output_dir, args.shape_name)
+    shape, shape_file = generate_shape(
+        images=nobg_images,
+        output_dir=args.output_dir,
+        output_name=args.shape_name
+    )
+    # shape_file = f"{os.path.join(args.output_dir, args.shape_name)}.glb"
 
     # Infer all view angles based on the front view
     # override some of the grid images with the known images
@@ -43,7 +47,7 @@ if __name__ == "__main__":
     text = "high quality"
     reference_conditioning_scale = 1.0
     seed = 42
-    output_images_grid = os.path.join(args.output_dir, "grid.png")
+    output_images_grid = f"{os.path.join(args.output_dir, args.grid_name)}.png"
 
     mesh = TexturedMesh(args.variant)
     images_grid = mesh.generate_mv_grid(
@@ -55,7 +59,7 @@ if __name__ == "__main__":
     )
     mesh.override_grid(
         images=images_grid,
-        orig=list(nobg_images.values()),
+        orig=nobg_images,
         grid_path=output_images_grid
     )
     mesh.generate_texture(

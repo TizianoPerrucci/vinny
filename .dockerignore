@@ -3,6 +3,7 @@
 .idea
 sys-lib
 flake*
+input
 output
 
 MV-Adapter

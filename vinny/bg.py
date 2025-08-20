@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 
 import torch
 from PIL import Image
@@ -36,14 +37,17 @@ class BackgroundRemover:
         image.putalpha(mask)
         return image
 
-    def remove_bg(self, image_path: str, output_dir: str) -> Image.Image:
-        print(f"Processing image {image_path}...")
-        output_name = os.path.splitext(os.path.basename(image_path))[0] + "_nobg_orig.png"
-        output_file = os.path.join(output_dir, output_name)
+    def remove_bg(self, files: Dict[str, str], output_dir: str) -> Dict[str, Image.Image]:
+        nobg_images: Dict[str, Image.Image] = {}
+        for side, image_path in files.items():
+            print(f"Processing image {image_path}...")
+            output_name = os.path.splitext(os.path.basename(image_path))[0] + "_nobg_orig.png"
+            output_file = os.path.join(output_dir, output_name)
 
-        # Remove background and save
-        img_nobg = self.rm_fn(Image.open(image_path))
-        img_nobg.save(output_file)
-        print(f"Saved modified image to {output_file}")
+            # Remove background and save
+            nobg_img = self.rm_fn(Image.open(image_path))
+            nobg_images[side] = nobg_img
+            nobg_img.save(output_file)
+            print(f"Saved modified image to {output_file}")
 
-        return img_nobg
+        return nobg_images
