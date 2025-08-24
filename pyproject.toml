@@ -29,6 +29,8 @@ dependencies = [
     "omegaconf (>=2.3.0,<3.0.0)",
     "open3d (>=0.19.0,<0.20.0)",
     "cvcuda-cu12 (>=0.15.0,<0.16.0)",
+    "rembg[gpu] (>=2.0.67,<3.0.0)",
+    "onnxruntime-gpu (>=1.22.0,<2.0.0)",
 ]
 
 
@@ -48,3 +50,6 @@ priority = "explicit"
 [tool.poetry.dependencies]
 torch = {source = "torch_cuda"}
 torchvision = {source = "torch_cuda"}
+
+[tool.poetry.group.types.dependencies]
+mypy = "^1.17.1"
