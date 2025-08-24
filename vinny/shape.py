@@ -7,30 +7,32 @@ from PIL import Image
 
 from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
 
-# The shape generative model, built on a scalable flow-based diffusion transformer
-def generate_shape(
-        images: Dict[str, Image.Image],
-        output_dir: str,
-        output_name: str
-) -> tuple[List[List[trimesh.Trimesh]], str]:
-    print("Loading DiT pipeline...")
-    pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-        'tencent/Hunyuan3D-2mv',
-        subfolder='hunyuan3d-dit-v2-mv',
-        variant='fp16'
-    )
 
-    print("Running shape pipeline...")
-    start_time = time.time()
-    white_mesh = pipeline(
-        image=images,
-        num_inference_steps=50,
-        octree_resolution=380,
-        num_chunks=20000,
-        generator=torch.manual_seed(12345),
-        output_type='trimesh'
-    )[0]
-    print("--- %s seconds ---" % (time.time() - start_time))
-    output_file = f'{output_dir}/{output_name}.glb'
-    white_mesh.export(output_file)
-    return white_mesh, output_file
+class Shape:
+    def __init__(self):
+        print("Loading DiT pipeline...")
+        # The shape generative model, built on a scalable flow-based diffusion transformer
+        self.pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+            model_path='tencent/Hunyuan3D-2mv',
+            subfolder='hunyuan3d-dit-v2-mv',
+        )
+
+    def generate(
+            self,
+            images: Dict[str, Image.Image],
+            output_file: str
+    ) -> tuple[List[List[trimesh.Trimesh]], str]:
+        print("Running shape pipeline...")
+        start_time = time.time()
+        white_mesh = self.pipeline(
+            image=images,
+            num_inference_steps=50,
+            octree_resolution=380,
+            num_chunks=20000,
+            generator=torch.manual_seed(12345),
+            output_type='trimesh'
+        )[0]
+        print("--- %s seconds ---" % (time.time() - start_time))
+        white_mesh.export(output_file)
+        print(f"Shape saved to {output_file}")
+        return white_mesh, output_file

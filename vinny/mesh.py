@@ -51,7 +51,27 @@ class TexturedMesh:
         self.num_views = 6
         self.adapter_path = "huanngzh/mv-adapter"
 
-    def prepare_pipeline(
+        print("Loading MV-Adapter pipeline...")
+        self.mv_pipe = self._prepare_pipeline(
+            pipeline_class=self.pipeline_class,
+            base_model=self.base_model,
+            vae_model=self.vae_model,
+            unet_model=None,
+            lora_model=None,
+            adapter_path=self.adapter_path,
+            adapter_weight_name=self.adapter_weight_name,
+            scheduler=None,
+            dtype=torch.float16,
+        )
+
+        print("Loading texture pipeline...")
+        self.texture_pipe = TexturePipeline(
+            upscaler_ckpt_path="/app/checkpoints/RealESRGAN_x2plus.pth",
+            inpaint_ckpt_path="/app/checkpoints/big-lama.pt",
+            device=self.device,
+        )
+
+    def _prepare_pipeline(
             self,
             pipeline_class: Type[StableDiffusionPipeline],
             base_model: str,
@@ -107,7 +127,7 @@ class TexturedMesh:
         return pipe
 
     @staticmethod
-    def preprocess_image(image: Image.Image, height: int, width: int):
+    def _preprocess_image(image: Image.Image, height: int, width: int):
         image = np.array(image)
         alpha = image[..., 3] > 0
         H, W = alpha.shape
@@ -137,7 +157,7 @@ class TexturedMesh:
 
         return image
 
-    def run_pipeline(
+    def _run_pipeline(
             self,
             pipe: StableDiffusionPipeline,
             mesh_path: str,
@@ -192,7 +212,7 @@ class TexturedMesh:
         # Prepare image
         reference_image = Image.open(image) if isinstance(image, str) else image
         if reference_image.mode == "RGBA":
-            reference_image = self.preprocess_image(reference_image, self.height, self.width)
+            reference_image = self._preprocess_image(reference_image, self.height, self.width)
 
         pipe_kwargs = {}
         if seed != -1 and isinstance(seed, int):
@@ -224,23 +244,9 @@ class TexturedMesh:
             seed: int,
             reference_conditioning_scale: float,
     ):
-        print("Loading MV-Adapter pipeline...")
-        pipe = self.prepare_pipeline(
-            pipeline_class=self.pipeline_class,
-            base_model=self.base_model,
-            vae_model=self.vae_model,
-            unet_model=None,
-            lora_model=None,
-            adapter_path=self.adapter_path,
-            adapter_weight_name=self.adapter_weight_name,
-            scheduler=None,
-            dtype=torch.float16,
-        )
-        print("Pipeline MV-Adapter ready")
-
         print("Running MV-Adapter pipeline...")
-        images, _, _, _ = self.run_pipeline(
-            pipe=pipe,
+        images, _, _, _ = self._run_pipeline(
+            pipe=self.mv_pipe,
             mesh_path=mesh,
             text=text,
             image=image,
@@ -260,25 +266,15 @@ class TexturedMesh:
         side_to_idx = {"front": 0, "left": 1, "back": 2, "right": 3}
         for side, img in orig.items():
             print(f"PreProcessing {img}...")
-            images[side_to_idx[side]] = self.preprocess_image(img, h, w)
+            images[side_to_idx[side]] = self._preprocess_image(img, h, w)
 
         print(f"Saving images grid to {grid_path} ...")
         make_image_grid(images, rows=1).save(grid_path)
         return orig
 
     def generate_texture(self, mesh_path: str, save_dir: str, save_name: str, rgb_path: str):
-        print("Loading texture pipeline...")
-        texture_pipe = TexturePipeline(
-            upscaler_ckpt_path="/app/checkpoints/RealESRGAN_x2plus.pth",
-            inpaint_ckpt_path="/app/checkpoints/big-lama.pt",
-            device=self.device,
-        )
-        print("Texture pipeline ready")
-
-        torch.cuda.empty_cache()
-
         print("Running texture pipeline...")
-        textured_glb_path = texture_pipe(
+        textured_glb_path = self.texture_pipe(
             mesh_path=mesh_path,
             save_dir=save_dir,
             save_name=save_name,
