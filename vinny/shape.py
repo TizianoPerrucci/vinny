@@ -11,7 +11,7 @@ from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
 class Shape:
     def __init__(self):
         print("Loading DiT pipeline...")
-        # The shape generative model, built on a scalable flow-based diffusion transformer
+        # The multi-view shape generative model, built on a scalable flow-based diffusion transformer
         self.pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
             model_path='tencent/Hunyuan3D-2mv',
             subfolder='hunyuan3d-dit-v2-mv',
@@ -19,11 +19,12 @@ class Shape:
 
     def generate(
             self,
-            images: Dict[str, Image.Image],
+            images_path: Dict[str, str],
             output_file: str
     ) -> tuple[List[List[trimesh.Trimesh]], str]:
         print("Running shape pipeline...")
         start_time = time.time()
+        images = {k: Image.open(v) for k, v in images_path.items()}
         white_mesh = self.pipeline(
             image=images,
             num_inference_steps=50,

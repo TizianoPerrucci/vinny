@@ -30,5 +30,6 @@ run: build
 	  --mount type=bind,src={{HOME}}/.cache/huggingface,dst=/root/.cache/huggingface \
 	  --mount type=bind,src={{PARENT}}/vnyx,dst=/app/vnyx \
 	  --mount type=bind,src={{PARENT}}/vinny/vinny,dst=/app/vinny \
+	  --mount type=bind,src={{PARENT}}/vinny/input,dst=/app/input \
 	  --mount type=bind,src={{PARENT}}/vinny/output,dst=/app/output \
 	  -t {{IMAGE_NAME}}:{{IMAGE_TAG}}
