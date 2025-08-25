@@ -6,7 +6,9 @@ IMAGE_TAG := "latest"
 
 clone-3d-libs:
     git clone https://github.com/Tencent-Hunyuan/Hunyuan3D-2.git  #3b9a151
+    rm -rf Hunyuan3D-2/assets
     git clone https://github.com/huanngzh/MV-Adapter.git  #4277e00
+    rm -rf MV-Adapter/assets
     git apply patches/MV-Adapter__Fix_import_and_enable_debug.patch --directory MV-Adapter
 
 checkpoints:
