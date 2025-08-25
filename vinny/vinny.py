@@ -106,10 +106,10 @@ class Vinny:
             mesh_path = mesh.generate_texture(
                 mesh_path=item["shape"],
                 save_dir=self.output_dir,
-                save_name="mesh",
+                save_name=f"{prefix}_mesh",
                 rgb_path=item["mv_grid"]
             )
-            item["mesh"] = mesh_path
+            item["mesh"] = mesh_path.shaded_model_save_path
 
     def _save_json(self):
         print("Saving JSON...")

@@ -1,4 +1,4 @@
-from mvadapter.pipelines.pipeline_texture import TexturePipeline, ModProcessConfig
+from mvadapter.pipelines.pipeline_texture import TexturePipeline, ModProcessConfig, TexturePipelineOutput
 
 
 class TexturedMesh:
@@ -17,7 +17,7 @@ class TexturedMesh:
             device=device,
         )
 
-    def generate_texture(self, mesh_path: str, save_dir: str, save_name: str, rgb_path: str) -> str:
+    def generate_texture(self, mesh_path: str, save_dir: str, save_name: str, rgb_path: str) -> TexturePipelineOutput:
         print("Running texture pipeline...")
         textured_glb_path = self.texture_pipe(
             mesh_path=mesh_path,
