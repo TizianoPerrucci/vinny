@@ -1,0 +1,124 @@
+<html>
+<head>
+    <title>Results</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        .image-container img {
+            max-width: 300px;
+            margin: 10px;
+        }
+
+        model-viewer {
+            width: 400px;
+            height: 400px;
+            margin: 10px;
+        }
+
+        .result-block {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background-color: #c3bcbc;
+        }
+
+        .mv-grid-container img {
+            max-width: 1500px;
+            margin: 10px;
+        }
+
+        .video-container video {
+            max-width: 500px;
+            margin: 10px;
+        }
+    </style>
+    <script>
+      $(document).ready(function () {
+        outputBasePath = 'output/0825vast/';
+        $.getJSON(outputBasePath + 'output.json', function (data) {
+          let resultHtml = '<div class="results">';
+          for (let prefix in data) {
+            const item = data[prefix];
+            resultHtml += `<div class="result-block">`;
+
+            resultHtml += `<h1>${prefix}</h1>`;
+
+            if (item.orig_video) {
+              resultHtml += `<h3>Original video</h3>`;
+              resultHtml += `<div class="video-container">
+                              <video controls>
+                                <source src="${item.orig_video.replace('/app/vnyx/', outputBasePath)}" type="video/mp4">
+                                Your browser does not support the video tag.
+                              </video>
+                             </div>`;
+            }
+            if (item.orig_images) {
+              resultHtml += `<h3>Original images</h3>`;
+              resultHtml += '<div class="image-container">';
+              for (let view in item.orig_images) {
+                let srcPath = '';
+                if (item.type === "images") {
+                  srcPath = item.orig_images[view].replace('/app/vnyx/', outputBasePath);
+                }
+                // orig_images could be located in the output dir if the item was a video
+                if (item.type === "video") {
+                  srcPath = item.orig_images[view].replace('/app/', '');
+                }
+
+                const filename = srcPath.split('/').pop();
+                resultHtml += `<div style="display: inline-block">
+                                <h4>${view} (${filename})</h4>
+                                <img src="${srcPath}" alt="${filename}">
+                               </div>`;
+              }
+              resultHtml += '</div>';
+            }
+            if (item.nobg_images) {
+              resultHtml += `<h3>Images w background removed</h3>`;
+              resultHtml += '<div class="image-container">';
+              for (let view in item.nobg_images) {
+                const filename = item.nobg_images[view].split('/').pop();
+                resultHtml += `<div style="display: inline-block">
+                                <h4>${view} (${filename})</h4>
+                                <img src="${item.nobg_images[view].replace('/app/', '')}" alt="${filename}">
+                              </div>`;
+              }
+              resultHtml += '</div>';
+            }
+            if (item.shape) {
+              resultHtml += `<h3>3D shape</h3>`;
+              resultHtml += `<model-viewer src="${item.shape.replace('/app/', '')}"
+                                        auto-rotate camera-controls
+                                        shadow-intensity="1"></model-viewer>`;
+            }
+            if (item.mv_grid) {
+              resultHtml += `<h3>Multi-view grid</h3>`;
+              resultHtml += `<div class="mv-grid-container">
+                             <div style="display: inline-block">
+                               <img src="${item.mv_grid.replace('/app/', '')}" alt="Multi-view grid">
+                             </div>
+                           </div>`;
+            }
+            if (item.mesh) {
+              resultHtml += `<h3>3D textured mesh</h3>`;
+              resultHtml += `<model-viewer src="${item.mesh.replace('/app/', '')}"
+                                        auto-rotate camera-controls
+                                        shadow-intensity="1"></model-viewer>`;
+            }
+
+            resultHtml += '</div>';
+          }
+          resultHtml += '</div>';
+          $('#results-container').html(resultHtml);
+        });
+      });
+    </script>
+</head>
+<body>
+<h1>Results</h1>
+<div id="results-container">
+    Loading results...
+</div>
+</body>
+</html>
